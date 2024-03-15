@@ -28,17 +28,36 @@ UPLOAD_FOLDER = "static"
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
+login_username=""
+login_password=""
+
 @app.get('/')
 def index(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
 @app.get('/index1')
 def index(request: Request):
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM details WHERE name = %s AND password1 = %s", (login_username, login_password))
+    fetched_data = cur.fetchone()  # Assuming you expect only one row
+    print(fetched_data)
+    cur.close()
+
     return templates.TemplateResponse("index1.html", {"request": request})
 
 @app.get('/about')
 def about(request: Request):
-    return templates.TemplateResponse("about.html", {"request": request})
+
+    print(login_username + "res")
+    print(login_password + "res")
+     
+    context = {
+        "request": request,
+        "name":login_username,
+        "password":login_password,
+    } 
+
+    return templates.TemplateResponse("about.html", context)
 
 
 @app.get('/login')
@@ -69,6 +88,9 @@ async def do_login(
     username: str = Form(...),
     password: str = Form(...),
 ):
+    login_username=username
+    login_password=password
+
     cur = conn.cursor()
     cur.execute("SELECT * FROM details WHERE name=%s and password1=%s", (username,password))
     existing_user = cur.fetchone()
